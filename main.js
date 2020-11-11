@@ -1,3 +1,37 @@
+const background = chrome.extension.getBackgroundPage();
+
+let gridData = [
+  ["", "", ""],
+  ["", "", ""],
+  ["", "", ""],
+];
+
+let table = null;
+
+chrome.storage.local.get(["gridData"], (result) => {
+  gridData = result.gridData ? result.gridData : gridData;
+
+  table = new Handsontable(document.getElementById("container"), {
+    data: gridData,
+    colWidths: 100,
+    rowHeaders: true,
+    colHeaders: true,
+    contextMenu: [
+      "row_above",
+      "row_below",
+      "col_left",
+      "col_right",
+      "remove_row",
+      "remove_col",
+      // "alignment",
+    ],
+  });
+});
+
+window.addEventListener("unload", (event) => {
+  background.chrome.storage.local.set({ gridData: table.getData() });
+});
+
 const saveToClipboard = (s) => {
   const textArea = document.createElement("textarea");
   document.body.appendChild(textArea);
@@ -7,30 +41,8 @@ const saveToClipboard = (s) => {
   document.body.removeChild(textArea);
 };
 
-const container = document.getElementById("container");
-
-const t = new Handsontable(container, {
-  data: [
-    ["", "", ""],
-    ["", "", ""],
-    ["", "", ""],
-  ],
-  colWidths: 100,
-  rowHeaders: true,
-  colHeaders: true,
-  contextMenu: [
-    "row_above",
-    "row_below",
-    "col_left",
-    "col_right",
-    "remove_row",
-    "remove_col",
-    // "alignment",
-  ],
-});
-
 document.getElementById("btnCopy").onclick = () => {
-  const data = t.getData().map((row) =>
+  const data = table.getData().map((row) =>
     row.map((cell) => {
       let r = cell === null ? "" : cell;
       return r.replace("\n", "<br>");
